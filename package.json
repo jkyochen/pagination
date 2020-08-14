@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "jest --detectOpenHandles --coverage --forceExit",
+    "test:log": "jest --detectOpenHandles --coverage --forceExit --runInBand",
     "migrate": "knex migrate:latest",
     "rollback": "knex migrate:rollback",
     "seed": "knex seed:run"

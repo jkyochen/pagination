@@ -2,6 +2,8 @@ require("dotenv").config();
 
 const { chai, app, knex } = require(".");
 
+let blockHeight = Number(process.env.blockHeight);
+
 describe("test mock node", () => {
     beforeAll(async () => {
         await knex.migrate.rollback();
@@ -13,45 +15,72 @@ describe("test mock node", () => {
         await knex.migrate.rollback();
     });
 
-    describe("GET /version", () => {
-        test("Should return version and start_height", async () => {
-            const res = await chai.request(app).get("/version");
+    describe("GET Offset-based Pagination", () => {
+        test("Should return homepage data", async () => {
+            const pagination = {
+                page: 1,
+                pageSize: 5,
+            }
+            const res = await chai.request(app).get(`/v1/blocklist?page=${pagination.page}&pageSize=${pagination.pageSize}`);
             expect(res.status).toEqual(200);
-            expect(res.body.version).toEqual(2);
-            expect(res.body.max_height).toEqual(
-                parseInt(process.env.blockHeight)
-            );
+            expect(res.body.blocks.length).toEqual(pagination.pageSize);
+            expect(res.body.blocks[0].height).toEqual(blockHeight);
+            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(blockHeight - 4);
+        });
+
+        test("Should return next page", async () => {
+            const pagination = {
+                page: 2,
+                pageSize: 5,
+            }
+            const res = await chai.request(app).get(`/v1/blocklist?page=${pagination.page}&pageSize=${pagination.pageSize}`);
+            expect(res.status).toEqual(200);
+            expect(res.body.blocks.length).toEqual(pagination.pageSize);
+
+            let curHeight = blockHeight - (pagination.page - 1) * pagination.pageSize;
+            expect(res.body.blocks[0].height).toEqual(curHeight);
+            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(curHeight - 4);
         });
     });
 
-    describe("GET /blockheader/:height", () => {
-        test("Should return block header", async () => {
-            let height = 10;
-            const res = await chai.request(app).get(`/blockheader/${height}`);
+    describe("GET Cursor-based Pagination", () => {
+        test("Should return homepage data", async () => {
+            const pagination = {
+                limit: 5,
+            }
+            const res = await chai.request(app).get(`/v2/blocklist?limit=${pagination.limit}`);
             expect(res.status).toEqual(200);
-            expect(res.body.blockHeader.height).toEqual(height);
+            expect(res.body.blocks.length).toEqual(pagination.limit);
+            expect(res.body.blocks[0].height).toEqual(blockHeight);
+            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(blockHeight - 4);
         });
-    });
 
-    describe("GET /blockevents/:height", () => {
-        test("Should return block all event hash", async () => {
-            let height = 10;
-            const res = await chai.request(app).get(`/blockevents/${height}`);
+        test("Should return next page", async () => {
+            const pagination = {
+                limit: 5,
+                after: 10,
+            }
+            const res = await chai.request(app).get(`/v2/blocklist?limit=${pagination.limit}&after=${pagination.after}`);
             expect(res.status).toEqual(200);
-            expect(res.body.eventHashs.length).toBeGreaterThan(0);
+            expect(res.body.blocks.length).toEqual(pagination.limit);
+
+            let curAfterCursorHeight = pagination.after;
+            expect(res.body.blocks[0].height).toEqual(curAfterCursorHeight - 1);
+            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(curAfterCursorHeight - pagination.limit);
         });
-    });
 
-    describe("GET /blockevent/:hash", () => {
-        test("Should return block event", async () => {
-            let height = 10;
-            let res = await chai.request(app).get(`/blockevents/${height}`);
-            res = await chai
-                .request(app)
-                .get(`/blockevent/${res.body.eventHashs[0]}`);
-
+        test("Should return prev page", async () => {
+            const pagination = {
+                limit: 5,
+                before: 10,
+            }
+            const res = await chai.request(app).get(`/v2/blocklist?limit=${pagination.limit}&before=${pagination.before}`);
             expect(res.status).toEqual(200);
-            expect(res.body.event.height).toEqual(height);
+            expect(res.body.blocks.length).toEqual(pagination.limit);
+
+            let curBeforeCursorHeight = pagination.before;
+            expect(res.body.blocks[0].height).toEqual(curBeforeCursorHeight + 5);
+            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(curBeforeCursorHeight + 1);
         });
     });
 });
