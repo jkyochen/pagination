@@ -8,18 +8,16 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
         integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
 
-    <link rel="stylesheet" href="/public/css/minirefresh.min.css">
-    <script src="/public/js/minirefresh.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/mescroll.js@1.4.1/mescroll.min.css">
+    <script src="https://unpkg.com/mescroll.js@1.4.1/mescroll.min.js" charset="utf-8"></script>
 
     <link rel="stylesheet" href="/public/css/main.css">
 </head>
 
 <body>
 
-    <div id="minirefresh" class="minirefresh-wrap">
-        <div class="minirefresh-scroll">
-            <ul class="list-group"></ul>
-        </div>
+    <div id="mescroll" class="mescroll">
+        <ul class="list-group"></ul>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
@@ -38,7 +36,7 @@
 
         let pagination = {
             page: 1,
-            pageSize: 5,
+            pageSize: 20,
             totalCount: 0,
         };
 
@@ -49,21 +47,22 @@
             render(data.blocks);
         }
 
-        let miniRefresh = new MiniRefresh({
-            container: '#minirefresh',
+        let mescroll = new MeScroll("mescroll", {
             down: {
-                callback: function() {
-                    window.location.reload();
-                    // miniRefresh.endDownLoading();
+                auto: false,
+                callback: function () {
+                    loadData().then(function () {
+                        window.location.reload();
+                    });
                 }
             },
             up: {
-                isAuto: true,
-                callback: function() {
+                callback: function () {
                     loadData().then(function () {
-                        miniRefresh.endUpLoading((pagination.page - 1) * pagination.pageSize > pagination.totalCount  ? true : false);
+                        let hasNext = (pagination.page - 1) * pagination.pageSize > pagination.totalCount  ? false : true;
+                        mescroll.endSuccess(pagination.pageSize, hasNext);
                     });
-                }
+                },
             }
         });
 
