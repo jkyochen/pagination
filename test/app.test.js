@@ -1,8 +1,6 @@
-require("dotenv").config();
-
 const { chai, app, knex } = require(".");
 
-let blockHeight = process.env.blockHeight = 20;
+let blockHeight = Number(process.env.blockHeight);
 
 describe("test mock node", () => {
     beforeAll(async () => {
