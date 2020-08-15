@@ -25,7 +25,7 @@ module.exports = {
             .orderBy("height", "desc")
             .limit(1);
         if (maxBlock) {
-            init_height = maxBlock.height;
+            init_height = maxBlock.height + 1;
             blockHeight = init_height + newBlockHeight;
             previousBlockHash = maxBlock.hash;
         }
