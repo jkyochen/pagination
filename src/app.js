@@ -9,17 +9,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/public", express.static(__dirname + "/public"));
 
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname + "/views/index.html"));
-});
+let viewRouter = {
+    "/": "index",
+    "/offset": "offset",
+    "/cursor": "cursor",
+    "/cursor-ws": "cursor-ws",
+}
 
-app.get("/offset", (req, res) => {
-    res.sendFile(path.join(__dirname + "/views/offset.html"));
-});
-
-app.get("/cursor", (req, res) => {
-    res.sendFile(path.join(__dirname + "/views/cursor.html"));
-});
+for (const [key, value] of Object.entries(viewRouter)) {
+    app.get(key, (req, res) => {
+        res.sendFile(path.join(__dirname + `/views/${value}.html`));
+    });
+}
 
 // Offset-based Pagination
 app.get("/v1/blocklist", async (req, res) => {
