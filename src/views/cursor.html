@@ -5,18 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cursor Based Pagination</title>
-    <link rel="stylesheet" href="/public/css/main.css">
-    <!-- CSS only -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
         integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://unpkg.com/mescroll.js@1.4.1/mescroll.min.css">
+    <script src="https://unpkg.com/mescroll.js@1.4.1/mescroll.min.js" charset="utf-8"></script>
+
+    <link rel="stylesheet" href="/public/css/main.css">
 </head>
 
 <body>
 
-    <div class="list-group"></div>
-    <ul class="list-group"></ul>
+    <div id="mescroll" class="mescroll">
+        <ul class="list-group"></ul>
+    </div>
 
-    <!-- JS, Popper.js, and jQuery -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
         crossorigin="anonymous"></script>
@@ -26,9 +29,63 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
         integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
         crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pulltorefreshjs/0.1.20/index.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ky@latest/umd.js"></script>
-    <script src="/public/js/cursor.js"></script>
+
+    <script src="/public/js/main.js"></script>
+    <script type="text/javascript">
+
+        let pagination = {
+            limit: 20,
+            hasPrev: true,
+            hasNext: true,
+        };
+
+        async function loadData({ before, after, direction } = {}) {
+            let data = await getData(`/v2/blocklist?limit=${pagination.limit}&before=${before || ""}&after=${after || ""}`);
+            if (data.blocks.length) {
+                let firstHeight = data.blocks[0].height;
+                let lastHeight = data.blocks[data.blocks.length - 1].height;
+
+                if (!before && !after) {
+                    pagination.before = firstHeight;
+                    pagination.after = lastHeight;
+                }
+                if (before) {
+                    pagination.before = firstHeight;
+                }
+                if (after) {
+                    pagination.after = lastHeight;
+                }
+                pagination.hasPrev = data.hasPrev;
+                pagination.hasNext = data.hasNext;
+            }
+            render(data.blocks, direction);
+        }
+
+        let mescroll = new MeScroll("mescroll", {
+            down: {
+                auto: false,
+                callback: function () {
+                    loadData({
+                        before: pagination.before,
+                        direction: "before",
+                    }).then(function () {
+                        mescroll.endSuccess();
+                    });
+                }
+            },
+            up: {
+                callback: function () {
+                    loadData({
+                        after: pagination.after,
+                    }).then(function () {
+                        mescroll.endSuccess(pagination.limit, pagination.hasNext);
+                    });
+                },
+            }
+        });
+
+    </script>
 </body>
 
 </html>

@@ -54,6 +54,8 @@ app.get("/v2/blocklist", async (req, res) => {
     }
 
     let blocks;
+    let hasPrev = true;
+    let hasNext = true;
     if (!before && !after) {
         blocks = await knex(tableNames.block)
             .orderBy("height", "desc")
@@ -64,6 +66,9 @@ app.get("/v2/blocklist", async (req, res) => {
             .orderBy("height", "asc")
             .limit(limit);
         blocks = blocks.reverse();
+
+        // Generate Block Data When pull lastest data
+        await block.triggerCreateBlockInDevelopment();
     } else {
         blocks = await knex(tableNames.block)
             .where("height", "<", after)
@@ -71,9 +76,14 @@ app.get("/v2/blocklist", async (req, res) => {
             .limit(limit);
     }
 
-    await block.triggerCreateBlockInDevelopment();
+    if (blocks.length && blocks[blocks.length - 1].height === 0) {
+        hasNext = false;
+    }
+
     res.json({
         blocks: blocks,
+        hasPrev,
+        hasNext,
     });
 });
 
