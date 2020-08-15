@@ -38,6 +38,20 @@ describe("test mock node", () => {
             expect(res.body.blocks[0].height).toEqual(curHeight);
             expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(curHeight - 4);
         });
+
+        test("Should return next page", async () => {
+            const pagination = {
+                page: 3,
+                pageSize: 5,
+            }
+            const res = await chai.request(app).get(`/v1/blocklist?page=${pagination.page}&pageSize=${pagination.pageSize}`);
+            expect(res.status).toEqual(200);
+            expect(res.body.blocks.length).toEqual(pagination.pageSize);
+
+            let curHeight = blockHeight - (pagination.page - 1) * pagination.pageSize;
+            expect(res.body.blocks[0].height).toEqual(curHeight);
+            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(curHeight - 4);
+        });
     });
 
     describe("GET Cursor-based Pagination", () => {

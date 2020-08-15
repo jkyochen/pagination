@@ -28,11 +28,14 @@ app.get("/v1/blocklist", async (req, res) => {
 
     const blocks = await knex(tableNames.block)
         .orderBy("height", "desc")
-        .limit(pageSize)
-        .offset((page - 1) * pageSize);
-    await block.triggerCreateBlockInDevelopment();
+        .offset((page - 1) * pageSize)
+        .limit(pageSize);
+    const [{ totalCount }] = await knex(tableNames.block).count("height", {
+        as: "totalCount",
+    });
     res.json({
         blocks: blocks,
+        totalCount,
     });
 });
 
