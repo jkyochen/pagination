@@ -7,6 +7,6 @@ exports.seed = async (knex) => {
     await knex(tableNames.event).del();
     await knex(tableNames.block).del();
 
-    let { newBlockHeight, txCount } = await block.create();
-    console.log(`Created: ${newBlockHeight} Block, ${txCount} Event.`);
+    let { diffBlockHeight, txCount } = await block.create();
+    console.log(`Created: ${diffBlockHeight} Block, ${txCount} Event.`);
 };

@@ -1,6 +1,6 @@
 const { chai, app, knex } = require(".");
 
-let blockHeight = Number(process.env.blockHeight);
+let maxBlockHeight = Number(process.env.blockHeight) - 1;
 
 describe("test mock node", () => {
     beforeAll(async () => {
@@ -21,8 +21,8 @@ describe("test mock node", () => {
             const res = await chai.request(app).get(`/v1/blocklist?page=${pagination.page}&pageSize=${pagination.pageSize}`);
             expect(res.status).toEqual(200);
             expect(res.body.blocks.length).toEqual(pagination.pageSize);
-            expect(res.body.blocks[0].height).toEqual(blockHeight);
-            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(blockHeight - 4);
+            expect(res.body.blocks[0].height).toEqual(maxBlockHeight);
+            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(maxBlockHeight - 4);
         });
 
         test("Should return next page", async () => {
@@ -34,7 +34,7 @@ describe("test mock node", () => {
             expect(res.status).toEqual(200);
             expect(res.body.blocks.length).toEqual(pagination.pageSize);
 
-            let curHeight = blockHeight - (pagination.page - 1) * pagination.pageSize;
+            let curHeight = maxBlockHeight - (pagination.page - 1) * pagination.pageSize;
             expect(res.body.blocks[0].height).toEqual(curHeight);
             expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(curHeight - 4);
         });
@@ -48,7 +48,7 @@ describe("test mock node", () => {
             expect(res.status).toEqual(200);
             expect(res.body.blocks.length).toEqual(pagination.pageSize);
 
-            let curHeight = blockHeight - (pagination.page - 1) * pagination.pageSize;
+            let curHeight = maxBlockHeight - (pagination.page - 1) * pagination.pageSize;
             expect(res.body.blocks[0].height).toEqual(curHeight);
             expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(curHeight - 4);
         });
@@ -62,8 +62,8 @@ describe("test mock node", () => {
             const res = await chai.request(app).get(`/v2/blocklist?limit=${pagination.limit}`);
             expect(res.status).toEqual(200);
             expect(res.body.blocks.length).toEqual(pagination.limit);
-            expect(res.body.blocks[0].height).toEqual(blockHeight);
-            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(blockHeight - 4);
+            expect(res.body.blocks[0].height).toEqual(maxBlockHeight);
+            expect(res.body.blocks[res.body.blocks.length - 1].height).toEqual(maxBlockHeight - 4);
         });
 
         test("Should return next page", async () => {

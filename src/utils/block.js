@@ -14,7 +14,7 @@ function sha256ToString(o) {
 }
 
 module.exports = {
-    create: async function (newBlockHeight = 0) {
+    create: async function (diffBlockHeight = 0) {
         let txCount = 0;
 
         let init_height = 0;
@@ -26,7 +26,7 @@ module.exports = {
             .limit(1);
         if (maxBlock) {
             init_height = maxBlock.height + 1;
-            blockHeight = init_height + newBlockHeight;
+            blockHeight = init_height + diffBlockHeight;
             previousBlockHash = maxBlock.hash;
         }
 
@@ -34,7 +34,7 @@ module.exports = {
             return 0;
         }
 
-        for (let h = init_height; h <= blockHeight; h++) {
+        for (let h = init_height; h < blockHeight; h++) {
             let block = {
                 height: h,
                 timestamp: Date.now(),
@@ -80,17 +80,16 @@ module.exports = {
 
         return {
             txCount,
-            newBlockHeight: blockHeight - init_height,
+            diffBlockHeight: blockHeight - init_height,
         };
     },
-    triggerCreateBlockInDevelopment: async function () {
+    triggerCreateBlockInDevelopment: async function (diffHeight = getRandomArbitrary(3, 8)) {
+
         if (process.env.NODE_ENV !== "development") {
             return;
         }
 
-        let { newBlockHeight, txCount } = await this.create(
-            getRandomArbitrary(3, 8)
-        );
-        console.log(`Created: ${newBlockHeight} Block, ${txCount} Event.`);
+        let { diffBlockHeight, txCount } = await this.create(diffHeight);
+        console.log(`Created: ${diffBlockHeight} Block, ${txCount} Event.`);
     },
 };

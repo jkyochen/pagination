@@ -1,6 +1,9 @@
 const express = require("express");
 const path = require("path");
 const app = express();
+const WebSocket = require("ws");
+const expressWs = require("express-ws")(app);
+const http = require("http");
 const tableNames = require("./constants/tableNames");
 const knex = require("./db/config");
 const block = require("./utils/block");
@@ -14,7 +17,7 @@ let viewRouter = {
     "/offset": "offset",
     "/cursor": "cursor",
     "/cursor-ws": "cursor-ws",
-}
+};
 
 for (const [key, value] of Object.entries(viewRouter)) {
     app.get(key, (req, res) => {
@@ -87,5 +90,42 @@ app.get("/v2/blocklist", async (req, res) => {
         hasNext,
     });
 });
+
+app.ws("/blocks", function (ws, req) {
+
+    triggerSetInterval.runInterval();
+
+    ws.on("close", function () {
+        console.log("close");
+        triggerSetInterval.closeInterval();
+    });
+});
+
+let aWss = expressWs.getWss("/blocks");
+let triggerSetInterval = (function () {
+    let intervalID;
+    return {
+        runInterval: function () {
+            if (!intervalID) {
+                intervalID = setInterval(async function () {
+                    await block.triggerCreateBlockInDevelopment(1);
+                    const blocks = await knex(tableNames.block)
+                        .orderBy("height", "desc")
+                        .limit(1);
+
+                    aWss.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify(blocks));
+                        }
+                    });
+                }, 2000);
+            }
+        },
+        closeInterval: function () {
+            clearInterval(intervalID);
+            intervalID = null;
+        },
+    };
+})();
 
 module.exports = app;
