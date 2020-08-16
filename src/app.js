@@ -118,7 +118,7 @@ let triggerSetInterval = (function () {
                             client.send(JSON.stringify(blocks));
                         }
                     });
-                }, 2000);
+                }, 1000);
             }
         },
         closeInterval: function () {
