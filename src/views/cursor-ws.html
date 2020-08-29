@@ -58,7 +58,8 @@
         });
 
         window.addEventListener("load", function(evt) {
-            let ws = new WebSocket(`ws://${location.host}/blocks`);
+            let suffix = location.protocol === "https:" ? "wss" : "ws";
+            let ws = new WebSocket(`${suffix}://${location.host}/blocks`);
             ws.onopen = function(evt) {
                 console.log("OPEN");
             };
